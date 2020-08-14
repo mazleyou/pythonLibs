@@ -5,6 +5,8 @@ import pandas
 import tensorflow as tf
 import numpy
 
+tf.enable_eager_execution()
+
 def find(s, el):
     for i in s.index:
         if s[i] == el:
@@ -13,7 +15,7 @@ def find(s, el):
 
 xlsx = pandas.read_excel('ex.xlsx')
 
-df = dt = pandas.DataFrame(columns=("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "label"))
+df = dt = pandas.DataFrame(columns=("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12",  "label"))
 
 #df.loc[0] = ["111", "222", "333", "333", "333", "333"]
 secondbeforerow = []
@@ -49,7 +51,7 @@ train_dataset_url = 'data_df_2.csv'
 
 df.to_csv(train_dataset_url, sep=',', index= False)
 
-column_names = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14", "label"]
+column_names = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "label"]
 
 feature_names = column_names[:-1]
 label_name = column_names[-1]
