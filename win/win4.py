@@ -62,16 +62,37 @@ print(toxic_comments_labels.head())
 
 X = toxic_features_labels.values
 
-y = toxic_comments_labels.values
-# y = toxic_comments_labels
+# y = toxic_comments_labels.values
+y = toxic_comments_labels
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
 
-maxlen = 12
+maxlen = 6
 
-X_train = pad_sequences(X_train, padding='post', maxlen=maxlen)
-X_test = pad_sequences(X_test, padding='post', maxlen=maxlen)
+# First output
+y1_train = y_train[["l1"]].values
+y1_test =  y_test[["l1"]].values
+
+# Second output
+y2_train = y_train[["l2"]].values
+y2_test =  y_test[["l2"]].values
+
+# Third output
+y3_train = y_train[["l3"]].values
+y3_test =  y_test[["l3"]].values
+
+# Fourth output
+y4_train = y_train[["l4"]].values
+y4_test =  y_test[["l4"]].values
+
+# Fifth output
+y5_train = y_train[["l5"]].values
+y5_test =  y_test[["l5"]].values
+
+# Sixth output
+y6_train = y_train[["l6"]].values
+y6_test =  y_test[["l6"]].values
 
 embeddings_dictionary = dict()
 
@@ -82,21 +103,30 @@ embedding_matrix = zeros((2, 100))
 deep_inputs = Input(shape=(maxlen,))
 embedding_layer = Embedding(vocab_size, 100, weights=[embedding_matrix], trainable=False)(deep_inputs)
 LSTM_Layer_1 = LSTM(128)(embedding_layer)
-dense_layer_1 = Dense(6, activation='sigmoid')(LSTM_Layer_1)
+
+output1 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
+output2 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
+output3 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
+output4 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
+output5 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
+output6 = Dense(1, activation='sigmoid')(LSTM_Layer_1)
 
 modelfilename = 'kerasmodel.h5'
 
 if not os.path.exists(modelfilename):
 
-    model = Model(inputs=deep_inputs, outputs=dense_layer_1)
+    model = Model(inputs=deep_inputs, outputs=[output1, output2, output3, output4, output5, output6])
 
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
 
     print(model.summary())
 
-    history = model.fit(X_train, y_train, batch_size=64, epochs=3, verbose=1, validation_split=0.2)
+    # history = model.fit(X_train, y_train, batch_size=64, epochs=3, verbose=1, validation_split=0.2)
 
-    score = model.evaluate(X_test, y_test, verbose=1)
+    history = model.fit(x=X_train, y=[y1_train, y2_train, y3_train, y4_train, y5_train, y6_train], batch_size=64,
+                        epochs=3, verbose=1, validation_split=0.2)
+
+    score = model.evaluate(X_test, y=[y1_test, y2_test, y3_test, y4_test, y5_test, y6_test], verbose=1)
 
     model.save(modelfilename)
 
@@ -105,6 +135,6 @@ if not os.path.exists(modelfilename):
 else:
     model = load_model(modelfilename)
 
-    d = numpy.array([[1,0,1,0,1,0,1,0,1,0,1,0]], numpy.int32)
+    d = numpy.array([[1,0,1,0,1,0]], numpy.int32)
     predictions = model.predict(d)
     print(predictions)
