@@ -11,7 +11,7 @@ conn = pymysql.connect(host='20.41.74.191', port=3306, user='root', passwd='taih
 curs = conn.cursor()
 
 for i, row in stock_df.iterrows():
-
+    if ()
     url = 'http://asp1.krx.co.kr/servlet/krx.asp.XMLSiseEng?code=' + row['종목코드']
     res = requests.get(url)
     text = res.text[res.text.find('<?xml'):]
