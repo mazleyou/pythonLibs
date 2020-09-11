@@ -173,9 +173,14 @@ def make_predict_list(inputdatas):
 
 finalresults = make_predict_list(predictrows)
 
+
+
 key_index = {}
-lastnumbers = [[0 for col in range(6)] for row in range(5)]
-for j in range(0, 5):
+
+for pred_value in predictrows[0]:
+    key_index[pred_value] = 1
+lastnumbers = [[0 for col in range(6)] for row in range(6)]
+for j in range(0, 6):
     key_index[finalresults[j]] = 1
     lastnumbers[j][0] = finalresults[j]
 
@@ -183,7 +188,7 @@ del predictrows[0][0]
 sample = copy.deepcopy(predictrows)
 
 
-for j in range(0, 5):
+for j in range(0, 6):
     sample[0].extend(lastnumbers[j][:1])
     numbers2 = make_predict_list(sample)
     for index2, value2 in enumerate(numbers2):
@@ -195,7 +200,7 @@ for j in range(0, 5):
 
 del predictrows[0][0]
 sample2 = copy.deepcopy(predictrows)
-for j in range(0, 5):
+for j in range(0, 6):
     sample2[0].extend(lastnumbers[j][:2])
     numbers2 = make_predict_list(sample2)
     for index2, value2 in enumerate(numbers2):
@@ -207,7 +212,7 @@ for j in range(0, 5):
 
 del predictrows[0][0]
 sample3 = copy.deepcopy(predictrows)
-for j in range(0, 5):
+for j in range(0, 6):
     sample3[0].extend(lastnumbers[j][:3])
     numbers2 = make_predict_list(sample3)
     for index2, value2 in enumerate(numbers2):
@@ -219,7 +224,7 @@ for j in range(0, 5):
 
 del predictrows[0][0]
 sample4 = copy.deepcopy(predictrows)
-for j in range(0, 5):
+for j in range(0, 6):
     sample4[0].extend(lastnumbers[j][:4])
     numbers2 = make_predict_list(sample4)
     for index2, value2 in enumerate(numbers2):
@@ -231,7 +236,7 @@ for j in range(0, 5):
 
 del predictrows[0][0]
 sample5 = copy.deepcopy(predictrows)
-for j in range(0, 5):
+for j in range(0, 6):
     sample5[0].extend(lastnumbers[j][:5])
     numbers2 = make_predict_list(sample5)
     for index2, value2 in enumerate(numbers2):
