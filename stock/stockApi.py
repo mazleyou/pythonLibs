@@ -11,7 +11,7 @@ conn = pymysql.connect(host='20.41.74.191', port=3306, user='root', passwd='taih
 curs = conn.cursor()
 
 for i, row in stock_df.iterrows():
-
+    if ()
     url = 'http://asp1.krx.co.kr/servlet/krx.asp.XMLSiseEng?code=' + row['종목코드']
     res = requests.get(url)
     text = res.text[res.text.find('<?xml'):]
@@ -30,8 +30,9 @@ for i, row in stock_df.iterrows():
             sellprice = i.attrib['sellprice']
             buyprice = i.attrib['buyprice']
             amount = i.attrib['amount']
-
+            # print(dt, row['종목코드'], time, negoprice, Debi, sellprice, buyprice, amount)
             curs.execute(insert_sql, (dt, row['종목코드'], time, negoprice, Debi, sellprice, buyprice, amount, ''))
-
+        # print('----------------')
+    # print('+++++++++++++++++++++')
 conn.close()
 
