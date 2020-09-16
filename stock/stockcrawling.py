@@ -3,7 +3,6 @@ from datetime import datetime
 import pymysql
 from time import sleep
 import random
-import schedule
 
 delaytime = random.uniform(2, 4)
 delaytime = delaytime/2

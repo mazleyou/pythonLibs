@@ -5,6 +5,24 @@ from datetime import datetime
 import pymysql
 from time import sleep
 import random
+import logging
+
+# 로그 생성
+logger = logging.getLogger()
+# 로그의 출력 기준 설정
+logger.setLevel(logging.INFO)
+# log 출력 형식
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# log 출력
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+# log를 파일에 출력
+file_handler = logging.FileHandler('stock.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 def job():
     print("I'm working...", "| [time] ", str(time.localtime().tm_hour) + ":" + str(time.localtime().tm_min) + ":" + str(time.localtime().tm_sec))
@@ -28,7 +46,8 @@ def job():
                 str = str.replace(",", "")
                 retval = int(str)
             return retval
-        except ValueError:
+        except ValueError as e:
+            logger.error(e)
             return 0
 
     def getStock(code, dt):
@@ -56,6 +75,7 @@ def job():
 
             conn.close()
         except Exception as e:
+            logger.error(e)
             print(e)
 
     # 'DataFrame.loc' 이용해서 사용할 컬럼만 추출
@@ -90,12 +110,15 @@ def job():
     print('------------')
 
     conn.close()
-
-sched = BackgroundScheduler()
-sched.start()
-# 0-4 weekday
-sched.add_job(job, 'cron', day_of_week='0-4', hour=16,  minute=40)
-
+try:
+    logger.debug("job start")
+    sched = BackgroundScheduler()
+    sched.start()
+    # 0-4 weekday
+    sched.add_job(job, 'cron', day_of_week='0-4', hour=16,  minute=40)
+except Exception as e:
+    logger.error(e)
+    print(e)
 while True:
     # print("Running main process...............")
-    time.sleep(100)
+    time.sleep(1000)

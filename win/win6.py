@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import pandas
 import tensorflow as tf
@@ -180,9 +178,13 @@ key_index = {}
 for pred_value in predictrows[0]:
     key_index[pred_value] = 1
 lastnumbers = [[0 for col in range(6)] for row in range(6)]
-for j in range(0, 6):
-    key_index[finalresults[j]] = 1
-    lastnumbers[j][0] = finalresults[j]
+
+finalresultsindex = 0
+for index2, value2 in enumerate(finalresults):
+    if not value2 in key_index.keys() and finalresultsindex < 6:
+        key_index[value2] = 1
+        lastnumbers[finalresultsindex][0] = value2
+        finalresultsindex = finalresultsindex + 1
 
 del predictrows[0][0]
 sample = copy.deepcopy(predictrows)
