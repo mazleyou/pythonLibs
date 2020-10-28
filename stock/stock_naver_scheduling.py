@@ -33,7 +33,7 @@ def job():
     # stock_xlsx = pd.read_excel('/home/taihoinst/stockCrawling/stock.xls', dtype = {'종목코드': str, '기업명': str, '액면가(원)': str})
     stock_xlsx = pd.read_excel('stock.xls', dtype={'종목코드': str, '기업명': str, '자본금(원)': str})
 
-    insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,COMPARE,SELLING,BUYING,VOLUME,FLUCTUATION) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,SELLING,BUYING,VOLUME) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
     insert_history_sql = """insert into sise_time_update_history(date, code, state) values(%s, %s, %s)"""
     update_history_sql = """update sise_time_update_history set state=%s where code=%s and date=%s"""
     sel_history_sql = """select * from sise_time_update_history where date = %s and code = %s"""
@@ -70,7 +70,7 @@ def job():
 
                 for i, row in temp.iterrows():
                     curs.execute(insert_sql, (
-                    dt, code, row["체결시각"], row['체결가'], row['전일비'], row['매도'], row['매수'], row['거래량'], row['변동량']))
+                    dt, code, row["체결시각"], row['체결가'], row['매도'], row['매수'], row['거래량']))
                 sleep(round(delaytime, 1))
 
             conn.close()
@@ -94,18 +94,9 @@ def job():
             s = s + 1
             print(str(s) + ' : ' + str(priceCheck(row['자본금(원)'])) + ' : ' + row['종목코드'])
             # 히스토리 로그 테이블에 당일 기록이 있는지 확인
-            curs.execute(sel_history_sql, (today_date, row['종목코드']))
-            res = curs.fetchall()
-
-            if len(res) == 0:
-                curs.execute(insert_history_sql, (today_date, row['종목코드'], 'START'))
-                getStock(row['종목코드'], today_date)
-                curs.execute(update_history_sql, ('END', row['종목코드'], today_date))
-            else:
-                if res[0][3] == "START":
-                    curs.execute(del_sise_sql, (today_date, row['종목코드']))
-                    getStock(row['종목코드'], today_date)
-                    curs.execute(update_history_sql, ('END', row['종목코드'], today_date))
+            #curs.execute(sel_history_sql, (today_date, row['종목코드']))
+            # res = curs.fetchall()
+            getStock(row['종목코드'], today_date)
 
     print('------------')
 
@@ -115,7 +106,7 @@ try:
     sched = BackgroundScheduler()
     sched.start()
     # 0-4 weekday
-    sched.add_job(job, 'cron', day_of_week='0-4', hour=16,  minute=40)
+    sched.add_job(job, 'cron', day_of_week='0-4', hour=17,  minute=00)
 except Exception as e:
     logger.error(e)
     print(e)
