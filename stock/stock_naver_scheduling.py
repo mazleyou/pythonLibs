@@ -25,8 +25,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 def job():
-    print("I'm working...", "| [time] ", str(time.localtime().tm_hour) + ":" + str(time.localtime().tm_min) + ":" + str(time.localtime().tm_sec))
-
     delaytime = random.uniform(2, 4)
     delaytime = delaytime / 2
 
@@ -76,7 +74,6 @@ def job():
             conn.close()
         except Exception as e:
             logger.error(e)
-            print(e)
 
     # 'DataFrame.loc' 이용해서 사용할 컬럼만 추출
     stock_df = stock_xlsx.loc[:, ['종목코드', '기업명', '자본금(원)']]
@@ -92,15 +89,13 @@ def job():
         # 엑셀 리스트중 자본금 하한 체크
         if priceCheck(row['자본금(원)']) > 30000000000:
             s = s + 1
-            print(str(s) + ' : ' + str(priceCheck(row['자본금(원)'])) + ' : ' + row['종목코드'])
+            # print(str(s) + ' : ' + str(priceCheck(row['자본금(원)'])) + ' : ' + row['종목코드'])
             # 히스토리 로그 테이블에 당일 기록이 있는지 확인
             #curs.execute(sel_history_sql, (today_date, row['종목코드']))
             # res = curs.fetchall()
             getStock(row['종목코드'], today_date)
-
-    print('------------')
-
     conn.close()
+
 try:
     logger.debug("job start")
     sched = BackgroundScheduler()
@@ -109,7 +104,6 @@ try:
     sched.add_job(job, 'cron', day_of_week='0-4', hour=11,  minute=00)
 except Exception as e:
     logger.error(e)
-    print(e)
 while True:
     # print("Running main process...............")
     time.sleep(1000)
