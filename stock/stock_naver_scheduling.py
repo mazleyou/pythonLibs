@@ -31,7 +31,7 @@ def job():
     # stock_xlsx = pd.read_excel('/home/taihoinst/stockCrawling/stock.xls', dtype = {'종목코드': str, '기업명': str, '액면가(원)': str})
     stock_xlsx = pd.read_excel('stock.xls', dtype={'종목코드': str, '기업명': str, '자본금(원)': str})
 
-    insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,SELLING,BUYING,VOLUME) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,SELLING,BUYING,VOLUME) values (%s, %s, %s, %s, %s, %s, %s)"""
     insert_history_sql = """insert into sise_time_update_history(date, code, state) values(%s, %s, %s)"""
     update_history_sql = """update sise_time_update_history set state=%s where code=%s and date=%s"""
     sel_history_sql = """select * from sise_time_update_history where date = %s and code = %s"""
@@ -101,7 +101,7 @@ try:
     sched = BackgroundScheduler()
     sched.start()
     # 0-4 weekday
-    sched.add_job(job, 'cron', day_of_week='0-4', hour=12,  minute=00)
+    sched.add_job(job, 'cron', day_of_week='0-4', hour=16,  minute=10)
 except Exception as e:
     logger.error(e)
 while True:
