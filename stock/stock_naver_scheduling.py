@@ -24,18 +24,27 @@ file_handler = logging.FileHandler('stock.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+THRESHOLD = 1.02
+INDEX_TIME = [time(9, 0), time(9, 30), time(10, 0), time(10, 30), time(11, 0), time(11, 30), time(12, 0), time(12, 30), time(13, 0), time(13, 30), time(14, 0), time(14, 30), time(15, 0), time(15, 30), time(16, 0)]
+
+def ret_flag(lastprice, nowprice):
+    retnum = 5
+    if lastprice * THRESHOLD <= nowprice:
+        retnum = 6
+    elif lastprice >= nowprice * THRESHOLD:
+        retnum = 4
+    return retnum
+
+
 def job():
     delaytime = random.uniform(2, 4)
     delaytime = delaytime / 2
 
     # stock_xlsx = pd.read_excel('/home/taihoinst/stockCrawling/stock.xls', dtype = {'종목코드': str, '기업명': str, '액면가(원)': str})
-    stock_xlsx = pd.read_excel('stock.xls', dtype={'종목코드': str, '기업명': str, '자본금(원)': str})
+    stock_xlsx = pd.read_excel('data.xls', dtype={'종목코드': str, '기업명': str, '자본금(원)': str})
 
     insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,SELLING,BUYING,VOLUME) values (%s, %s, %s, %s, %s, %s, %s)"""
-    insert_history_sql = """insert into sise_time_update_history(date, code, state) values(%s, %s, %s)"""
-    update_history_sql = """update sise_time_update_history set state=%s where code=%s and date=%s"""
-    sel_history_sql = """select * from sise_time_update_history where date = %s and code = %s"""
-    del_sise_sql = """delete from sise_time where date = %s and code = %s"""
+    INSERT_THRESHOLD = """insert into sise_threshold(DATE,CODE,TIME,THRESHOLD) values (%s, %s, %s, %s)"""
 
     def priceCheck(str):
         try:
@@ -54,9 +63,10 @@ def job():
                                    charset='utf8', autocommit=True)
             curs = conn.cursor()
 
-            time = dt + '160000'
+            searchtime = dt + '160000'
+            dict_temp = {}
             for page in range(1, 43):
-                url = f'https://finance.naver.com/item/sise_time.nhn?code={code}&thistime={time}&page={page}'
+                url = f'https://finance.naver.com/item/sise_time.nhn?code={code}&thistime={searchtime}&page={page}'
                 temp = pd.read_html(url)[0]
                 temp = temp.loc[temp["체결시각"].isnull() == False]
                 temp['체결가'] = temp['체결가'].astype(int)
@@ -69,7 +79,22 @@ def job():
                 for i, row in temp.iterrows():
                     curs.execute(insert_sql, (
                     dt, code, row["체결시각"], row['체결가'], row['매도'], row['매수'], row['거래량']))
+                    dict_temp[time(int(row["체결시각"].split(":")[0]), int(row["체결시각"].split(":")[1]))] = row['체결가']
                 sleep(round(delaytime, 1))
+
+                indexprice = 0
+
+                for n, time in enumerate(INDEX_TIME):
+                    timelist = list(dict_temp.keys())
+                    # 내림차순의 시간 리스트
+                    sortedtime = sorted(timelist)
+
+                    for m, gettime in enumerate(sortedtime):
+                        if gettime >= time:
+                            if n != 0:
+                                curs.execute(INSERT_THRESHOLD, (dt, code, gettime.strftime("%H:%M"), ret_flag(indexprice, dict_temp[gettime])))
+                            indexprice = dict_temp[gettime]
+                            break
 
             conn.close()
         except Exception as e:
