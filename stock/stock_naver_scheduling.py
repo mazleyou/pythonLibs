@@ -2,6 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import pandas as pd
 from datetime import datetime
+from datetime import time
 import pymysql
 from time import sleep
 import random
