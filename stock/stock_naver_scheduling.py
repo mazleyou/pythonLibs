@@ -5,10 +5,10 @@ import datetime
 import pymysql
 import random
 
-THRESHOLD = 1.02
+THRESHOLD = 1.012
 INDEX_TIME = [datetime.time(9, 0), datetime.time(9, 30), datetime.time(10, 0), datetime.time(10, 30), datetime.time(11, 0), datetime.time(11, 30),datetime.time(12, 0), datetime.time(12, 30), datetime.time(13, 0), datetime.time(13, 30), datetime.time(14, 0), datetime.time(14, 30), datetime.time(15, 0), datetime.time(15, 30), datetime.time(16, 0)]
 insert_sql = """insert into sise_time(DATE,CODE,TIME,PRICE,SELLING,BUYING,VOLUME) values (%s, %s, %s, %s, %s, %s, %s)"""
-INSERT_THRESHOLD = """insert into sise_threshold(DATE,CODE,TIME,THRESHOLD) values (%s, %s, %s, %s)"""
+INSERT_UP = """insert into sise_up(DATE,CODE,TIME) values (%s, %s, %s)"""
 delaytime = random.uniform(2, 4) / 2
 
 def ret_flag(lastprice, nowprice):
@@ -21,6 +21,7 @@ def ret_flag(lastprice, nowprice):
 
 def getStock(code):
     try:
+        print(code)
         dt = datetime.date.today().strftime("%Y%m%d")
         conn = pymysql.connect(host='20.41.74.191', port=3306, user='root', passwd='taiholab', db='taiholab',
                                charset='utf8', autocommit=True)
@@ -39,8 +40,7 @@ def getStock(code):
             temp['변동량'] = temp['변동량'].astype(int)
 
             for i, row in temp.iterrows():
-                curs.execute(insert_sql, (
-                dt, code, row["체결시각"], row['체결가'], row['매도'], row['매수'], row['거래량']))
+                # curs.execute(insert_sql, (dt, code, row["체결시각"], row['체결가'], row['매도'], row['매수'], row['거래량']))
                 dict_temp[datetime.time(int(row["체결시각"].split(":")[0]), int(row["체결시각"].split(":")[1]))] = row['체결가']
             # time.sleep(round(delaytime, 1))
 
@@ -54,7 +54,8 @@ def getStock(code):
             for m, gettime in enumerate(sortedtime):
                 if gettime >= time:
                     if n != 0:
-                        curs.execute(INSERT_THRESHOLD, (dt, code, gettime.strftime("%H:%M"), ret_flag(indexprice, dict_temp[gettime])))
+                        if (ret_flag(indexprice, dict_temp[gettime]) == 6):
+                            curs.execute(INSERT_UP, (dt, code, str(n)))
                     indexprice = dict_temp[gettime]
                     break
 
@@ -87,7 +88,7 @@ try:
     sched = BackgroundScheduler()
     sched.start()
     # 0-4 weekday
-    sched.add_job(job, 'cron', day_of_week='0-4', hour=16,  minute=20)
+    sched.add_job(job, 'cron', day_of_week='0-4', hour=17,  minute=2)
 except Exception as e:
     print(e)
 while True:
