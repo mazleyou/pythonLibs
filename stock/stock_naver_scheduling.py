@@ -88,7 +88,7 @@ try:
     sched = BackgroundScheduler()
     sched.start()
     # 0-4 weekday
-    sched.add_job(job, 'cron', day_of_week='0-4', hour=17,  minute=2)
+    sched.add_job(job, 'cron', day_of_week='0-4', hour=17,  minute=30)
 except Exception as e:
     print(e)
 while True:
