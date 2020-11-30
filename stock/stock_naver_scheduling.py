@@ -74,7 +74,7 @@ def priceCheck(str):
         print(e)
         return 0
 
-def job():
+def crawling_job():
     stock_xlsx = pd.read_excel('data.xls', dtype={'종목코드': str, '기업명': str, '자본금(원)': str})
     # 'DataFrame.loc' 이용해서 사용할 컬럼만 추출
     stock_df = stock_xlsx.loc[:, ['종목코드', '기업명', '자본금(원)']]
@@ -83,12 +83,44 @@ def job():
         # 엑셀 리스트중 자본금 하한 체크
         if priceCheck(row['자본금(원)']) > 30000000000:
             getStock(row['종목코드'])
+
+def count_job():
+    conn = pymysql.connect(host='20.41.74.191', port=3306, user='root', passwd='taiholab', db='taiholab',
+                           charset='utf8', autocommit=True)
+    curs = conn.cursor(pymysql.cursors.DictCursor)
+
+    curs.execute("""select max(date) as maxdate from sise_up""")
+    maxdate = curs.fetchone()
+
+    curs.execute("""select * from sise_up where date = %s""", maxdate['maxdate'])
+    rows = curs.fetchall()
+    conn.close()
+
+    for index_time in range(1, 12):
+        now_codes = list(row['CODE'] for row in rows if row['TIME'] == index_time)
+        next_codes = list(row['CODE'] for row in rows if row['TIME'] == index_time + 1)
+        for nowcode in now_codes:
+            for nextcode in next_codes:
+                codes = nowcode + nextcode
+                conn = pymysql.connect(host='20.41.74.191', port=3306, user='root', passwd='taiholab', db='taiholab',
+                                       charset='utf8', autocommit=True)
+                curs = conn.cursor(pymysql.cursors.DictCursor)
+                curs.execute("""select count from sise_count where codes = %s""", codes)
+                count = curs.fetchone()
+                if count is None:
+                    curs.execute("""insert into sise_count(CODES) values (%s)""", codes)
+                else:
+                    curs.execute("""update sise_count set count=%s where codes=%s""", (str(count['count'] + 1), codes))
+                conn.close()
+
+
 try:
     print("job start")
     sched = BackgroundScheduler()
     sched.start()
     # 0-4 weekday
-    sched.add_job(job, 'cron', day_of_week='0-4', hour=17,  minute=30)
+    sched.add_job(crawling_job, 'cron', day_of_week='0-4', hour=17,  minute=30)
+    sched.add_count(count_job, 'cron', day_of_week='0-4', hour=6,  minute=30)
 except Exception as e:
     print(e)
 while True:
