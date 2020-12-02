@@ -120,7 +120,7 @@ try:
     sched.start()
     # 0-4 weekday
     sched.add_job(crawling_job, 'cron', day_of_week='0-4', hour=17,  minute=30)
-    sched.add_count(count_job, 'cron', day_of_week='0-4', hour=6,  minute=30)
+    sched.add_job(count_job, 'cron', day_of_week='0-4', hour=6,  minute=30)
 except Exception as e:
     print(e)
 while True:
