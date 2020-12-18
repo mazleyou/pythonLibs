@@ -30,8 +30,8 @@ try:
     print("job start")
     sched = BackgroundScheduler()
     sched.start()
-    # sched.add_job(klines, 'interval', hours=4)
-    sched.add_job(klines, 'interval', seconds=59)
+    sched.add_job(klines, 'interval', hours=4)
+    # sched.add_job(klines, 'interval', seconds=59)
 except Exception as e:
     print(e)
 while True:
