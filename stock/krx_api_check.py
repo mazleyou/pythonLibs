@@ -1,8 +1,8 @@
 from xml.etree import ElementTree
-from datetime import datetime
+import datetime
 import requests
 
-time = datetime.today().strftime("%Y%m%d") + '160000'
+time = datetime.date.today().strftime("%Y%m%d") + '160000'
 
 code = '105840'
 
