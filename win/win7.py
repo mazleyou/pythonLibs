@@ -47,7 +47,6 @@ label_name = column_names[-1]
 print("특성: {}".format(feature_names))
 print("레이블: {}".format(label_name))
 
-class_names = list(range(0, 45))
 batch_size = 32
 
 if not os.path.exists(modelfilename):
