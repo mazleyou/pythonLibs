@@ -3,54 +3,51 @@ import pandas
 import tensorflow as tf
 import numpy
 import copy
+
+#전회 3회분을 조합해서 예측 하는 모델 생성
+EXCELCOMLOMES = 7
+FETURECOUNT = 3
+
 def find(s, el):
     for i in s.index:
         if s[i] == el:
             return i
     return None
 
-xls = pandas.read_excel('ex2.xls')
-xls_list = xls.values.tolist()
 
-for roundIdx in range(len(xls_list)):
-    for nextIdx in range(1, 8):
-        if xls_list[roundIdx][0] == xls_list[roundIdx+nextIdx][0]:
-            print(roundIdx)
-    for numberIdx in range(len(xls_list[roundIdx])):
-        print(xls_list[roundIdx][numberIdx])
-
-
-df = pandas.DataFrame(columns=("f1", "f2", "f3", "f4", "f5", "f6", "f7", "label"))
-
-
-
-beforerow = []
-predictrows = []
-for i, row in xls.iterrows():
-    if len(beforerow) > 0:
-        tempa = []
-        for j in range(1, 8):
-            #feture
-            tempa.append(row[j])
-        #label is last time not exist number
-        for j in range(0, 46):
-            if numpy.where(beforerow.values == j)[0].size > 0:
-                df = df.append(pandas.Series(tempa + [j - 1], index=df.columns), ignore_index=True)
-    else:
-        tempa = []
-        for j in range(1, 8):
-            tempa.append(row[j])
-        predictrows.append(tempa)
-    beforerow = row
+def df_to_list(pram_df):
+    ret_list = []
+    for row in pram_df.iterrows():
+        for j in range(1, EXCELCOMLOMES):
+            ret_list.append(row[1][j])
+    return ret_list
 
 
 modelfilename = 'my_model.h5'
 
 train_dataset_url = 'data_df_2.csv'
 
-df.to_csv(train_dataset_url, sep=',', index= False)
+xlsx = pandas.read_excel('ex2.xls')
 
-column_names = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "label"]
+if not os.path.exists(train_dataset_url):
+    df = pandas.DataFrame(columns=("f1", "f2", "f3", "label"))
+
+    #전회 3회분의 기록을 조합해서 입력데이터로 사용하기 때문에 인덱스 4부터 시작
+    for xlsx_index in range(0, 100):
+        record_1 = df_to_list(xlsx[xlsx_index+3:xlsx_index+4])
+        record_2 = df_to_list(xlsx[xlsx_index+2:xlsx_index+3])
+        record_3 = df_to_list(xlsx[xlsx_index+1:xlsx_index+2])
+        label = df_to_list(xlsx[xlsx_index:xlsx_index+1])
+        for row_1 in range(0, 6):
+            for row_2 in range(0, 6):
+                for row_3 in range(0, 6):
+                    for row_label in range(0, 6):
+                        tempa = [record_1[row_1], record_2[row_2], record_3[row_3], label[row_label] - 1]
+                        df = df.append(pandas.Series(tempa, index=df.columns), ignore_index=True)
+    df.to_csv(train_dataset_url, sep=',', index= False)
+
+
+column_names = ["f1", "f2", "f3", "label"]
 
 feature_names = column_names[:-1]
 label_name = column_names[-1]
@@ -58,7 +55,6 @@ label_name = column_names[-1]
 print("특성: {}".format(feature_names))
 print("레이블: {}".format(label_name))
 
-class_names = list(range(0, 45))
 batch_size = 32
 
 if not os.path.exists(modelfilename):
@@ -83,15 +79,15 @@ if not os.path.exists(modelfilename):
     features, labels = next(iter(train_dataset))
 
     model = tf.keras.Sequential([
-      tf.keras.layers.Dense(10, activation=tf.nn.relu, input_shape=(7,)),  # 입력의 형태가 필요합니다.
+      tf.keras.layers.Dense(10, activation=tf.nn.relu, input_shape=(FETURECOUNT,)),  # 입력의 형태가 필요합니다.
       tf.keras.layers.Dense(10, activation=tf.nn.relu),
       tf.keras.layers.Dense(45)
     ])
 
     predictions = model(features)
-    predictions[:7]
+    predictions[:FETURECOUNT]
 
-    tf.nn.softmax(predictions[:7])
+    tf.nn.softmax(predictions[:FETURECOUNT])
 
     print("  예측: {}".format(tf.argmax(predictions, axis=1)))
     print("레이블: {}".format(labels))
@@ -174,83 +170,43 @@ def make_predict_list(inputdatas):
 
     return return_results
 
-finalresults = make_predict_list(predictrows)
+
+predict_1 = df_to_list(xlsx[2:3])
+predict_2 = df_to_list(xlsx[1:2])
+predict_3 = df_to_list(xlsx[0:1])
+
+final_dict = {}
+
+
+def f2(x):
+    return x[1]
+
+for row_1 in range(0, 6):
+    for row_2 in range(0, 6):
+        for row_3 in range(0, 6):
+            finalresults = make_predict_list([[predict_1[row_1], predict_2[row_2], predict_3[row_3]]])
+            score = 100
+            for result in finalresults:
+                if result in final_dict:
+                    final_dict[result] = final_dict[result] + score
+                else:
+                    final_dict[result] = score
+                score = score - 1
+
+
+res = sorted(final_dict.items(), key=(lambda x: x[1]), reverse = True)
+
+line_end = 0
+for key in res:
+    line_end = line_end + 1
+    if line_end == 6:
+        line_end = 0
+        print(key[0])
+    else:
+        print(key[0], end='\t')
 
 
 
-key_index = {}
-
-for pred_value in predictrows[0]:
-    key_index[pred_value] = 1
-lastnumbers = [[0 for col in range(6)] for row in range(6)]
-
-finalresultsindex = 0
-for index2, value2 in enumerate(finalresults):
-    if not value2 in key_index.keys() and finalresultsindex < 6:
-        key_index[value2] = 1
-        lastnumbers[finalresultsindex][0] = value2
-        finalresultsindex = finalresultsindex + 1
-
-del predictrows[0][0]
-sample = copy.deepcopy(predictrows)
 
 
-for j in range(0, 6):
-    sample[0].extend(lastnumbers[j][:1])
-    numbers2 = make_predict_list(sample)
-    for index2, value2 in enumerate(numbers2):
-        if not value2 in key_index.keys():
-            key_index[value2] = 1
-            lastnumbers[j][1] = value2
-            break
-    del sample[0][5]
 
-del predictrows[0][0]
-sample2 = copy.deepcopy(predictrows)
-for j in range(0, 6):
-    sample2[0].extend(lastnumbers[j][:2])
-    numbers2 = make_predict_list(sample2)
-    for index2, value2 in enumerate(numbers2):
-        if not value2 in key_index.keys():
-            key_index[value2] = 1
-            lastnumbers[j][2] = value2
-            break
-    del sample2[0][4:6]
-
-del predictrows[0][0]
-sample3 = copy.deepcopy(predictrows)
-for j in range(0, 6):
-    sample3[0].extend(lastnumbers[j][:3])
-    numbers2 = make_predict_list(sample3)
-    for index2, value2 in enumerate(numbers2):
-        if not value2 in key_index.keys():
-            key_index[value2] = 1
-            lastnumbers[j][3] = value2
-            break
-    del sample3[0][3:6]
-
-del predictrows[0][0]
-sample4 = copy.deepcopy(predictrows)
-for j in range(0, 6):
-    sample4[0].extend(lastnumbers[j][:4])
-    numbers2 = make_predict_list(sample4)
-    for index2, value2 in enumerate(numbers2):
-        if not value2 in key_index.keys():
-            key_index[value2] = 1
-            lastnumbers[j][4] = value2
-            break
-    del sample4[0][2:6]
-
-del predictrows[0][0]
-sample5 = copy.deepcopy(predictrows)
-for j in range(0, 6):
-    sample5[0].extend(lastnumbers[j][:5])
-    numbers2 = make_predict_list(sample5)
-    for index2, value2 in enumerate(numbers2):
-        if not value2 in key_index.keys():
-            key_index[value2] = 1
-            lastnumbers[j][5] = value2
-            break
-    del sample5[0][1:6]
-
-print(lastnumbers)
