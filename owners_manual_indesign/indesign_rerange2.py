@@ -22,7 +22,7 @@ except Exception as e:
     print('Make new indesign file failed: ' + str(e))
 
 # 원본 인디자인 파일 열기
-myFile = r'C:\hskim\ws\python\pythonLibs\owners_manual_indesign\NE2.indd'
+myFile = r'C:\Users\daredevil\PycharmProjects\pythonLibs\owners_manual_indesign\NE1-0.indd'
 myDoc = app.Open(myFile, ShowingWindow=False)
 docBaseName = myDoc.Name
 
